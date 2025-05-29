@@ -1,6 +1,8 @@
 use crate::parinfer::chomp_cr;
 use crate::types::*;
 use std::env;
+use std::fs::OpenOptions;
+use std::io::Write;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Coord {
@@ -158,6 +160,22 @@ fn cursor_script(request: &Request, answer: &Answer) -> String {
 }
 
 pub fn kakoune_output(request: &Request, answer: Answer) -> (String, i32) {
+    if let Ok(mut file) = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open("/tmp/parinfer-debug.log")
+    {
+        writeln!(file, "=== PARINFER DEBUG ===").ok();
+        writeln!(file, "Request: {:#?}", request).ok();
+        writeln!(file, "Answer: {:#?}", answer).ok();
+        
+        if answer.success {
+            let fixes = fixes(&request.text, &answer.text);
+            writeln!(file, "Fixes: {:#?}", fixes).ok();
+        }
+        
+        writeln!(file, "=== END DEBUG ===\n").ok();
+    }
     if answer.success {
         let fixes = fixes(&request.text, &answer.text);
         let script = format!(
