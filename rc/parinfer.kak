@@ -17,7 +17,7 @@ parinfer-enable-window -params ..1 %{
         echo -debug %val{error}
     }
     evaluate-commands %sh{
-    printf "%s\n" "hook -group parinfer window NormalKey .* %{ parinfer-try-mode ${1:--smart} }
+    printf "%s\n" "hook -group parinfer window NormalKey (?!u)(?!U)(?!<c-k>)(?!<c-j>) %{ parinfer-try-mode ${1:--smart} }
                    hook -group parinfer window InsertChar (?!\n).* %{ parinfer-try-mode ${1:--smart} }
                    hook -group parinfer window InsertDelete .* %{ parinfer-try-mode ${1:--smart} }"
     }
@@ -93,25 +93,24 @@ parinfer -params ..2 %{
                 fi
                 printf 'set-option global parinfer_select_switches "%s"\n' "$kak_opt_parinfer_select_switches"
             fi
-            # Apply parinfer edits in draft and capture the result
-            output=$("$kak_opt_parinfer_path" --mode=$mode --input-format=kakoune --output-format=kakoune)
-            printf 'evaluate-commands -draft %%{ %s; execute-keys %%{%%y} }\n' "$output"
+            # VARIABLES USED:
+            # kak_opt_filetype,
+            # kak_opt_parinfer_cursor_char_column,
+            # kak_opt_parinfer_cursor_line,
+            # kak_opt_parinfer_previous_text,
+            # kak_opt_parinfer_previous_cursor_char_column,
+            # kak_opt_parinfer_previous_cursor_line,
+            # kak_opt_parinfer_select_switches,
+            # kak_selection
+            exec "$kak_opt_parinfer_path" --mode=$mode --input-format=kakoune --output-format=kakoune
         }
-        # Now reg " contains the modified buffer content
         evaluate-commands %{
+            set-option buffer parinfer_previous_text %val{selection}
             set-option buffer parinfer_previous_timestamp %val{timestamp}
             set-option buffer parinfer_previous_cursor_char_column %val{cursor_char_column}
             set-option buffer parinfer_previous_cursor_line %val{cursor_line}
         }
     }
-    # Replace entire buffer with the result from draft
-    execute-keys '%d<c-r>"'
-    # Update previous text after replacement
-    evaluate-commands -draft -no-hooks %{
-        execute-keys '%'
-        set-option buffer parinfer_previous_text %val{selection}
-    }
-    # Restore cursor position
     evaluate-commands %sh{
         line=$kak_opt_parinfer_cursor_line
         column=$kak_opt_parinfer_cursor_char_column
@@ -127,6 +126,7 @@ parinfer -params ..2 %{
         echo "select ${kak_opt_parinfer_select_switches} ${line}.${column},${line}.${column} $@"
     }
 }
+
 # parinfer-try-paren: try to enable paren mode
 define-command -hidden parinfer-try-paren %{ try %{
     parinfer -paren
