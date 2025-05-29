@@ -102,7 +102,10 @@ parinfer -params ..2 %{
             # kak_opt_parinfer_previous_cursor_line,
             # kak_opt_parinfer_select_switches,
             # kak_selection
-            exec "$kak_opt_parinfer_path" --mode=$mode --input-format=kakoune --output-format=kakoune
+            # exec "$kak_opt_parinfer_path" --mode=$mode --input-format=kakoune --output-format=kakoune
+            output=$(exec "$kak_opt_parinfer_path" --mode=$mode --input-format=kakoune --output-format=kakoune)
+            echo "$output" > /tmp/parinfer-output.kak
+            echo "$output"
         }
         evaluate-commands %{
             set-option buffer parinfer_previous_text %val{selection}
