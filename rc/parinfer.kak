@@ -17,7 +17,8 @@ parinfer-enable-window -params ..1 %{
         echo -debug %val{error}
     }
     evaluate-commands %sh{
-    printf "%s\n" "hook -group parinfer window NormalKey (?!u)(?!U)(?!<c-k>)(?!<c-j>).* %{ parinfer-try-mode ${1:--smart} }
+    printf "%s\n" "hook -group parinfer window NormalKey (u|U|<c-k>|<c-j>) %{ set-option buffer parinfer_previous_timestamp %val{timestamp} }
+                   hook -group parinfer window NormalIdle %{ parinfer-try-mode ${1:--smart} }
                    hook -group parinfer window InsertChar (?!\n).* %{ parinfer-try-mode ${1:--smart} }
                    hook -group parinfer window InsertDelete .* %{ parinfer-try-mode ${1:--smart} }"
     }
